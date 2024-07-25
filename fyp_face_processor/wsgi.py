@@ -1,5 +1,5 @@
 """
-WSGI config for fyp_face_processor project.
+WSGI config for api_test project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
