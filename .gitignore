@@ -1,0 +1,72 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+*.env
+*.venv
+*.coverage
+*.mo
+*.pot
+*.pyo
+*.egg
+*.egg-info
+*.env
+*.venv
+.env/
+.venv/
+db.sqlite3
+instance/
+.webassets-cache
+
+# Django Migrations
+*/migrations/*
+!*/migrations/__init__.py
+
+# Node modules
+node_modules/
+
+# OS-specific files:
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+*.env
+config/settings/local.py
+config/settings/local/*.py
+
+# VSCode settings
+.vscode/
+.vscode/settings.json
+
+# pipenv
+Pipfile.lock
+
+# coverage reports
+htmlcov/
+.coverage
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# pyre
+.pyre/
+
+# PyCharm
+.idea/
+
+# Pycharm specific settings
+*.iml
+
+# Editor settings
+.vscode/
