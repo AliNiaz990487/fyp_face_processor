@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { IoCamera } from "react-icons/io5";
-import ReactProfile from "react-profile";
+import { openEditor } from "react-profile";
 import "react-profile/themes/default.min.css";
 import Loading from "./assets/images/loading.gif";
 import "./App.css";
-
-let count = 1;
 
 function App() {
   const [image, setImage] = useState(null);
@@ -14,7 +12,6 @@ function App() {
   const [gender, setGender] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [invalidImage, setInvalidImage] = useState(false);
-  const [showProfileEditor, setShowProfileEditor] = useState(false);
 
   const handleFileChange = (event) => {
     setProcessedImage(null);
@@ -24,7 +21,6 @@ function App() {
       setImage(file);
     } else {
       setInvalidImage(true);
-      setImage(null);
     }
   };
 
@@ -59,17 +55,27 @@ function App() {
   };
 
   const handleEditClick = () => {
-    setShowProfileEditor(true);
+    openEditor({ src: image })
+      .then((result) => {
+        result?.editedImage?.getImageFromBlob().then(async (img) => {
+          console.log(image)
+          const response = await fetch(img.currentSrc)
+          const blob = await response.blob()
+          
+          const imageExt = image.name.split(".")[1]
+          const file = new File([blob], image.name, {type: `image/${imageExt}`})
+          console.log(file)
+          setImage(file)
+          
+        })
+      });
   };
-
-  console.log(`rendered ${count}`);
-  count += 1;
 
   return (
     <main className="app">
       <form onSubmit={handleSubmit}>
-        <div className="image" style={image && { backgroundImage: `url(${URL.createObjectURL(image)})` }}>
-          <input type="file" accept="image/*" onChange={handleFileChange} required />
+        <div className="image" style={image ? { backgroundImage: `url(${URL.createObjectURL(image)})` } : {}}>
+          <input type="file" accept="image/jpeg, image/png" onChange={handleFileChange} required />
           <span><IoCamera /></span>
         </div>
 
@@ -78,13 +84,9 @@ function App() {
           <input type="color" value={color} onChange={handleColorChange} required />
         </label>
 
-        <button type="submit" className="btn process-btn">Process with AI</button>
-        {image && <button type="button" className="btn edit-btn" onClick={handleEditClick}>Edit</button>}
+        <button type="submit" className="button process-btn">Process with AI</button>
+        {image && <button type="button" className="button edit-btn" onClick={handleEditClick}>Edit</button>}
       </form>
-
-      {showProfileEditor && image && (
-        <ReactProfile src={URL.createObjectURL(image)} />
-      )}
 
       {processedImage && !isLoading && (
         <div>
@@ -94,7 +96,21 @@ function App() {
         </div>
       )}
       {isLoading && <div className="loading"><img src={Loading} alt="Loading" /></div>}
-      {invalidImage && <p>Please upload a valid image file (JPEG or PNG).</p>}
+      {invalidImage && (
+        <div className="modal show d-block" style={{backgroundColor: "rgba(0, 0, 0, 0.5"}} tabIndex="-1" onClick={() => setInvalidImage(false)}>
+          <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content">
+              <div className="modal-header bg-danger">
+                <h5 className="modal-title fs-3 fw-bold text-white">Invalid Image</h5>
+                <button type="button" className="btn-close fs-3" onClick={() => setInvalidImage(false)}></button>
+              </div>
+              <div className="modal-body bg-danger-subtle fs-4">
+                <p>Please upload a valid image file (JPEG or PNG).</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
