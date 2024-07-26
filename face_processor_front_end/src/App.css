@@ -105,6 +105,7 @@ form button:hover {
     display: flex;
     align-items: center;
     justify-content: center;
+    align-items: center;
     position: absolute;
     top: 0;
     left: 0;
@@ -114,8 +115,8 @@ form button:hover {
     z-index: 1;
 }
 .loading img {
-    width: 10rem;
-    padding-bottom: 30rem;
+    width: 15rem;
+    /* padding-bottom: 30rem; */
 }
 
 

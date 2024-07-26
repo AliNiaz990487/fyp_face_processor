@@ -26,7 +26,6 @@ function App() {
       setInvalidImage(false);
       setOriginalImage(file);
       setImage(file);
-      console.log("handleFileChange originalImage", originalImage);
     } else {
       setInvalidImage(true);
     }
@@ -63,25 +62,26 @@ function App() {
     setShowModal(true);
   };
 
-  const handleEditClick = () => {
-    console.log("handleEditClick originalImage", originalImage);
-    openEditor({ src: originalImage })
+  const handleEditClick = (img) => {
+    openEditor({ src: img })
       .then((result) => {
         result?.editedImage?.getImageFromBlob().then(async (img) => {
-          console.log(image);
           const response = await fetch(img.currentSrc);
           const blob = await response.blob();
 
           const imageExt = image.name.split(".")[1];
           const file = new File([blob], image.name, { type: `image/${imageExt}` });
-          console.log(file);
           setImage(file);
         });
       });
   };
 
   const handleCloseModal = () => {
-    setShowConfirmationModal(true);
+    if (processedImage.split(",")[1] !== "none") {
+      setShowConfirmationModal(true);
+    } else {
+      setShowModal(false);
+    }
   };
 
   const handleConfirmClose = () => {
@@ -91,6 +91,26 @@ function App() {
 
   const handleCancelClose = () => {
     setShowConfirmationModal(false);
+  };
+
+  const handleDownloadImage = async (img) => {
+    if (!(img instanceof File)) {
+      const response = await fetch(img);
+      const blob = await response.blob();
+
+      const imageExt = image.name.split(".")[1];
+      img = new File([blob], image.name, { type: `image/${imageExt}` });
+    }
+
+    // Create a download link and trigger the download
+    const url = URL.createObjectURL(img);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = img.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -107,7 +127,11 @@ function App() {
         </label>
 
         <button type="submit" className="button process-btn">Process with AI</button>
-        {image && <button type="button" className="button edit-btn" onClick={handleEditClick}>Edit</button>}
+        {image &&
+          <>
+            <button type="button" className="button edit-btn" onClick={() => handleEditClick(originalImage)}>Edit</button>
+            <button type="button" className="button save-btn" onClick={() => handleDownloadImage(image)}>Download</button>
+          </>}
       </form>
 
       <ProcessedImageModal
@@ -115,6 +139,8 @@ function App() {
         onHide={handleCloseModal}
         processedImage={processedImage}
         gender={gender}
+        onEdit={() => { handleEditClick(processedImage); setShowModal(false) }}
+        onDownload={() => { handleDownloadImage(processedImage) }}
       />
 
       <InvalidImageModal show={invalidImage} onHide={() => setInvalidImage(false)} />
