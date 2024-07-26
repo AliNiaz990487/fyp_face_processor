@@ -4,21 +4,29 @@ import { openEditor } from "react-profile";
 import "react-profile/themes/default.min.css";
 import Loading from "./assets/images/loading.gif";
 import "./App.css";
+import ProcessedImageModal from './components/ProcessedImageModel';
+import InvalidImageModal from './components/InvalidImageModal';
+import ConfirmationModal from './components/ConfirmationModal';
 
 function App() {
   const [image, setImage] = useState(null);
-  const [color, setColor] = useState('#347ed9');
   const [processedImage, setProcessedImage] = useState(null);
-  const [gender, setGender] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [originalImage, setOriginalImage] = useState(null);
   const [invalidImage, setInvalidImage] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [color, setColor] = useState('#347ed9');
+  const [gender, setGender] = useState('none');
+  const [showModal, setShowModal] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
   const handleFileChange = (event) => {
     setProcessedImage(null);
     const file = event.target.files[0];
-    if (file && (file.type === "image/jpeg" || file.type === "image/png")) { 
+    if (file && (file.type === "image/jpeg" || file.type === "image/png")) {
       setInvalidImage(false);
+      setOriginalImage(file);
       setImage(file);
+      console.log("handleFileChange originalImage", originalImage);
     } else {
       setInvalidImage(true);
     }
@@ -52,23 +60,37 @@ function App() {
     setProcessedImage(`data:image/jpeg;base64,${data.image}`);
     setGender(data.gender);
     setIsLoading(false);
+    setShowModal(true);
   };
 
   const handleEditClick = () => {
-    openEditor({ src: image })
+    console.log("handleEditClick originalImage", originalImage);
+    openEditor({ src: originalImage })
       .then((result) => {
         result?.editedImage?.getImageFromBlob().then(async (img) => {
-          console.log(image)
-          const response = await fetch(img.currentSrc)
-          const blob = await response.blob()
-          
-          const imageExt = image.name.split(".")[1]
-          const file = new File([blob], image.name, {type: `image/${imageExt}`})
-          console.log(file)
-          setImage(file)
-          
-        })
+          console.log(image);
+          const response = await fetch(img.currentSrc);
+          const blob = await response.blob();
+
+          const imageExt = image.name.split(".")[1];
+          const file = new File([blob], image.name, { type: `image/${imageExt}` });
+          console.log(file);
+          setImage(file);
+        });
       });
+  };
+
+  const handleCloseModal = () => {
+    setShowConfirmationModal(true);
+  };
+
+  const handleConfirmClose = () => {
+    setShowModal(false);
+    setShowConfirmationModal(false);
+  };
+
+  const handleCancelClose = () => {
+    setShowConfirmationModal(false);
   };
 
   return (
@@ -88,29 +110,22 @@ function App() {
         {image && <button type="button" className="button edit-btn" onClick={handleEditClick}>Edit</button>}
       </form>
 
-      {processedImage && !isLoading && (
-        <div>
-          <h2>Processed Image:</h2>
-          <img src={processedImage} alt="Processed" />
-          <p>Gender: {gender}</p>
-        </div>
-      )}
+      <ProcessedImageModal
+        show={showModal}
+        onHide={handleCloseModal}
+        processedImage={processedImage}
+        gender={gender}
+      />
+
+      <InvalidImageModal show={invalidImage} onHide={() => setInvalidImage(false)} />
+
+      <ConfirmationModal
+        show={showConfirmationModal}
+        onConfirm={handleConfirmClose}
+        onCancel={handleCancelClose}
+      />
+
       {isLoading && <div className="loading"><img src={Loading} alt="Loading" /></div>}
-      {invalidImage && (
-        <div className="modal show d-block" style={{backgroundColor: "rgba(0, 0, 0, 0.5"}} tabIndex="-1" onClick={() => setInvalidImage(false)}>
-          <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-content">
-              <div className="modal-header bg-danger">
-                <h5 className="modal-title fs-3 fw-bold text-white">Invalid Image</h5>
-                <button type="button" className="btn-close fs-3" onClick={() => setInvalidImage(false)}></button>
-              </div>
-              <div className="modal-body bg-danger-subtle fs-4">
-                <p>Please upload a valid image file (JPEG or PNG).</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
